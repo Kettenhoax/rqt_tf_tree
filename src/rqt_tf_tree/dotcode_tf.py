@@ -32,6 +32,7 @@
 
 import time
 import rclpy
+from rclpy.clock import Clock
 import yaml
 
 from tf2_msgs.srv import FrameGraph
@@ -56,7 +57,7 @@ class RosTfTreeDotcodeGenerator(object):
     def generate_dotcode(self,
                          dotcode_factory,
                          tf2_frame_srv,
-                         timer=rclpy.clock.Clock(),
+                         timer=Clock(),
                          yaml_parser=yaml,
                          rank='same',   # None, same, min, max, source, sink
                          ranksep=0.2,   # vertical distance between layers
@@ -93,8 +94,9 @@ class RosTfTreeDotcodeGenerator(object):
             self.listen_duration = 0
 
             yaml_data = tf2_frame_srv.call(FrameGraph.Request()).frame_yaml
-            data = yaml_parser.load(yaml_data)
-            self.graph = self.generate(data, timer.now().nanoseconds / rclpy.time.CONVERSION_CONSTANT)
+            data = yaml_parser.safe_load(yaml_data)
+            timer_secs = timer.now().nanoseconds / rclpy.time.CONVERSION_CONSTANT
+            self.graph = self.generate(data, timer_secs)
             self.dotcode = self.dotcode_factory.create_dot(self.graph)
 
         return self.dotcode
@@ -135,8 +137,4 @@ class RosTfTreeDotcodeGenerator(object):
                                                legend_label,
                                                root,
                                                style='invis')
-
-        # dot += ' subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";\n'
-        # dot += '"Recorded at time: '+str(rospy.Time.now().to_sec())+'"[ shape=plaintext ] ;\n'
-        # dot += '}->"'+root+'"[style=invis];\n}'
         return graph

@@ -66,15 +66,11 @@ class RosTfTree(QObject):
 
         self._widget = QWidget()
 
-        # factory builds generic dotcode items
         self.dotcode_factory = PydotFactory()
-        # self.dotcode_factory = PygraphvizFactory()
-        # generator builds rosgraph
         self.dotcode_generator = RosTfTreeDotcodeGenerator()
-        self.tf2_buffer_ = tf2_ros.Buffer()
+        self.tf2_buffer_ = tf2_ros.Buffer(node=self._node)
         self.tf2_listener_ = tf2_ros.TransformListener(self.tf2_buffer_, self._node)
 
-        # dot_to_qt transforms into Qt elements using dot layout
         self.dot_to_qt = DotToQtGenerator()
 
         _, package_path = get_resource('packages', 'rqt_tf_tree')
@@ -82,7 +78,8 @@ class RosTfTree(QObject):
         loadUi(ui_file, self._widget, {'InteractiveGraphicsView': InteractiveGraphicsView})
         self._widget.setObjectName('RosTfTreeUi')
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(self._widget.windowTitle() + (' (%d)' % context.serial_number()))
+            serial = context.serial_number()
+            self._widget.setWindowTitle(self._widget.windowTitle() + (' (%d)' % serial))
 
         self._scene = QGraphicsScene()
         self._scene.setBackgroundBrush(Qt.white)
